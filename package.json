@@ -1,0 +1,33 @@
+{
+  "name": "l8-upgrade-ws-api1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=production node app.js",
+    "dev": "cross-env NODE_ENV=development nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frank575/l8-upgrade-ws-api1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/frank575/l8-upgrade-ws-api1/issues"
+  },
+  "homepage": "https://github.com/frank575/l8-upgrade-ws-api1#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "socket.io": "^4.3.1",
+    "uuidv4": "^6.2.12"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.6"
+  }
+}
