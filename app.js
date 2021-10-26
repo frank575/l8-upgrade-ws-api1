@@ -12,8 +12,11 @@ const app = express()
 const http = require('http')
 const server = http.createServer(app)
 
-const { Server } = require('socket.io')
-const io = new Server(server)
+const io = require('socket.io')(server, {
+	cors: {
+		origin: '*',
+	},
+})
 
 app.use(cors())
 
@@ -52,10 +55,14 @@ const QUESTIONS = [
 	},
 ]
 const MESSAGE_TYPE = {
+	JOIN: ['JOIN', '連接成功'],
 	OVER: ['OVER', '遊戲結束'],
+	PONG: ['PONG', '乓'],
 }
+let userNotFoundNum = 0
 let current = 0
 let userMap = {}
+let onlineUserMap = {}
 let messages = []
 
 // const commonResponse = {
@@ -69,20 +76,34 @@ const next = () => {
 	current = 0
 }
 
+const getQuestion = () => {
+	return QUESTIONS[current]
+}
+
+const getUsers = () =>
+	Object.keys(userMap).map(id => {
+		const { socketId, ...otherInfo } = userMap[id]
+		return {
+			...otherInfo,
+			id,
+			online: onlineUserMap[id] != null,
+		}
+	})
+
 const restart = () => {
-	const ranks = Object.keys(userMap)
-		.map(k => userMap[k])
+	const ranks = getUsers()
 		.sort(e => e.score)
 		.splice(0, 3)
 
 	startTime = Date.now()
 	userMap = {}
+	onlineUserMap = {}
 	messages = []
 
 	io.emit('messages', {
 		type: MESSAGE_TYPE.OVER[0],
-		ranks,
 		message: MESSAGE_TYPE.OVER[1],
+		ranks,
 	})
 }
 
@@ -97,12 +118,83 @@ setInterval(() => {
 	}
 }, 15000)
 
-const { uuid } = require('uuidv4')
+const { v4: uuidv4 } = require('uuid')
+
+const getNotFoundUser = (userId, socketId) => {
+	const name = `匿名者${++userNotFoundNum}`
+	const user = {
+		name,
+		socketId,
+		score: 0,
+	}
+	userMap[userId] = user
+	return user
+}
 
 io.on('connection', socket => {
-	console.log('user connection', uuid())
-	socket.on('RE_START', restart)
+	console.log('user connection')
+
+	const userInfoString = socket.handshake.headers['user_info']
+	let socketId = socket.id
+	let userId, user
+	if (userInfoString != null) {
+		try {
+			const userInfo = JSON.parse(userInfoString)
+			const id = userInfo.id
+			const name = userInfo.name
+			if (name == null && id == null) {
+				throw new Error('什麼都沒傳')
+			} else if (id == null) {
+				userId = uuidv4()
+				user = {
+					name,
+					socketId,
+					score: 0,
+				}
+				userMap[userId] = user
+			} else {
+				if (userMap[id] == null) {
+					throw new Error('找不到使用者')
+				}
+				userId = id
+				userMap[userId].socketId = socketId
+				user = userMap[userId]
+			}
+		} catch (err) {
+			console.error(err)
+			userId = uuidv4()
+			user = getNotFoundUser(userId, socketId)
+		}
+	} else {
+		userId = uuidv4()
+		user = getNotFoundUser(userId, socketId)
+	}
+	onlineUserMap[userId] = socketId
+
+	socket.emit('connection', {
+		type: MESSAGE_TYPE.JOIN[0],
+		message: MESSAGE_TYPE.JOIN[1],
+		user,
+		users: getUsers(),
+		question: getQuestion(),
+		messages,
+	})
+
+	socket.on('restart', restart)
+
+	socket.on('ping', () => {
+		console.log(`ping with ${user.name}`)
+		socket.emit('ping', {
+			type: MESSAGE_TYPE.PONG[0],
+			message: MESSAGE_TYPE.PONG[1],
+		})
+	})
+
+	// 私發
+	// socket.broadcast.to(socketid).emit('message', 'for your eyes only');
+
 	socket.on('disconnect', () => {
+		delete onlineUserMap[userId]
 		console.log('user disconnected')
 	})
 })
