@@ -54,15 +54,28 @@ const QUESTIONS = [
 		]),
 	},
 ]
-const MESSAGE_TYPE = {
+
+const IO_EMIT_EVENT_NAME = {
+	connection: ['connection', '連線成功'],
+	messages: ['messages', '發送信息'],
+	ping: ['ping', '乒乓'],
+}
+const IO_ON_EVENT_NAME = {
+	connection: ['connection', '連線開始'],
+	disconnect: ['disconnect', '斷開連線'],
+	restart: ['restart', '重新開始'],
+	ping: ['ping', '乒乓'],
+	bless: ['bless', '讚與倒讚'],
+}
+const IO_EMIT_TYPE = {
 	JOIN: ['JOIN', '連接成功'],
-	OVER: ['OVER', '遊戲結束'],
+	OVER_THEN_RESTART: ['OVER_THEN_RESTART', '遊戲結束，請重新開始'],
 	PONG: ['PONG', '乓'],
 }
 let userNotFoundNum = 0
 let current = 0
 let userMap = {}
-let onlineUserMap = {}
+let onlineUserSocketIdMap = {}
 let messages = []
 
 // const commonResponse = {
@@ -82,11 +95,11 @@ const getQuestion = () => {
 
 const getUsers = () =>
 	Object.keys(userMap).map(id => {
-		const { socketId, ...otherInfo } = userMap[id]
+		const { ...otherInfo } = userMap[id]
 		return {
 			...otherInfo,
 			id,
-			online: onlineUserMap[id] != null,
+			online: onlineUserSocketIdMap[id] != null,
 		}
 	})
 
@@ -96,13 +109,21 @@ const restart = () => {
 		.splice(0, 3)
 
 	startTime = Date.now()
-	userMap = {}
-	onlineUserMap = {}
-	messages = []
 
-	io.emit('messages', {
-		type: MESSAGE_TYPE.OVER[0],
-		message: MESSAGE_TYPE.OVER[1],
+	const _userMap = {}
+	for (const userId in onlineUserSocketIdMap) {
+		_userMap[userId] = userMap[userId]
+	}
+	userMap = _userMap
+	messages = []
+	current = 0
+
+	io.sockets.emit(IO_EMIT_EVENT_NAME.messages[0], {
+		type: IO_EMIT_TYPE.OVER_THEN_RESTART[0],
+		message: IO_EMIT_TYPE.OVER_THEN_RESTART[1],
+		users: getUsers(),
+		question: getQuestion(),
+		messages: [],
 		ranks,
 	})
 }
@@ -116,24 +137,21 @@ setInterval(() => {
 		startTime = now
 		restart()
 	}
-}, 15000)
+}, 1000)
 
 const { v4: uuidv4 } = require('uuid')
 
-const getNotFoundUser = (userId, socketId) => {
-	const name = `匿名者${++userNotFoundNum}`
+const getNotFoundUser = (userId, _name) => {
+	const name = _name ? _name : `匿名者${++userNotFoundNum}`
 	const user = {
 		name,
-		socketId,
 		score: 0,
 	}
 	userMap[userId] = user
 	return user
 }
 
-io.on('connection', socket => {
-	console.log('user connection')
-
+io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	const userInfoString = socket.handshake.headers['user_info']
 	let socketId = socket.id
 	let userId, user
@@ -148,54 +166,62 @@ io.on('connection', socket => {
 				userId = uuidv4()
 				user = {
 					name,
-					socketId,
 					score: 0,
 				}
 				userMap[userId] = user
 			} else {
 				if (userMap[id] == null) {
-					throw new Error('找不到使用者')
+					if (name == null) {
+						throw new Error('找不到使用者')
+					} else {
+						userId = uuidv4()
+						user = getNotFoundUser(userId, name)
+					}
+				} else {
+					userId = id
+					user = userMap[userId]
 				}
-				userId = id
-				userMap[userId].socketId = socketId
-				user = userMap[userId]
 			}
 		} catch (err) {
 			console.error(err)
 			userId = uuidv4()
-			user = getNotFoundUser(userId, socketId)
+			user = getNotFoundUser(userId)
 		}
 	} else {
 		userId = uuidv4()
-		user = getNotFoundUser(userId, socketId)
+		user = getNotFoundUser(userId)
 	}
-	onlineUserMap[userId] = socketId
+	onlineUserSocketIdMap[userId] = socketId
+	console.log(`user: ${user.name} connection`)
 
-	socket.emit('connection', {
-		type: MESSAGE_TYPE.JOIN[0],
-		message: MESSAGE_TYPE.JOIN[1],
+	socket.emit(IO_EMIT_EVENT_NAME.connection[0], {
+		type: IO_EMIT_TYPE.JOIN[0],
+		message: IO_EMIT_TYPE.JOIN[1],
 		user,
 		users: getUsers(),
 		question: getQuestion(),
 		messages,
 	})
 
-	socket.on('restart', restart)
+	socket.on(IO_ON_EVENT_NAME.restart[0], restart)
 
-	socket.on('ping', () => {
+	socket.on(IO_ON_EVENT_NAME.ping[0], () => {
 		console.log(`ping with ${user.name}`)
-		socket.emit('ping', {
-			type: MESSAGE_TYPE.PONG[0],
-			message: MESSAGE_TYPE.PONG[1],
+		socket.emit(IO_EMIT_EVENT_NAME.ping[0], {
+			type: IO_EMIT_TYPE.PONG[0],
+			message: IO_EMIT_TYPE.PONG[1],
 		})
 	})
 
-	// 私發
-	// socket.broadcast.to(socketid).emit('message', 'for your eyes only');
+	socket.on(IO_ON_EVENT_NAME.bless[0], restart)
 
-	socket.on('disconnect', () => {
-		delete onlineUserMap[userId]
-		console.log('user disconnected')
+	// 私發
+	// socket.broadcast.to(socketid).emit(IO_EMIT_EVENT_NAME.messages[0], 'for your eyes only');
+
+	// 斷線處理
+	socket.on(IO_ON_EVENT_NAME.disconnect[0], () => {
+		console.log(`user: ${user.name} disconnected`)
+		delete onlineUserSocketIdMap[userId]
 	})
 })
 
