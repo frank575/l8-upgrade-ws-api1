@@ -159,6 +159,7 @@ const SCORE_MAP = {
 }
 let userNotFoundNum = 0
 let current = 0
+let messageId = 0
 let userMap = {}
 let onlineUserSocketIdMap = {}
 let messages = []
@@ -308,8 +309,9 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 
 	console.log(`user: ${user.name} on ${IO_ON_EVENT_NAME.connection[0]}`)
 	const connectMessage = {
-		id: uuidv4(),
+		id: ++messageId,
 		type: IO_EMIT_TYPE.JOIN[0],
+		user: getFrom(user),
 		message: `${user.name} 加入了房間`,
 		dateTime: dateFormat(new Date(), dateFormatMask),
 	}
@@ -354,7 +356,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			}
 			const dateTime = dateFormat(new Date(), dateFormatMask)
 			const commonMessage = {
-				id: uuidv4(),
+				id: ++messageId,
 				type: IO_EMIT_TYPE.BLESS_YOU[0],
 				blessType: type,
 				dateTime,
@@ -411,7 +413,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 		const dateTime = dateFormat(new Date(), dateFormatMask)
 		const score = pass ? SCORE_MAP.ANSWER_CORRECT : SCORE_MAP.ANSWER_ERROR
 		const commonMessage = {
-			id: uuidv4(),
+			id: ++messageId,
 			type: IO_EMIT_TYPE.ANSWER[0],
 			pass,
 			message: `${user.name} 作答${pass ? '正確' : '錯誤'} ${getScoreString(
@@ -444,7 +446,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			return
 		const dateTime = dateFormat(new Date(), dateFormatMask)
 		const commonMessage = {
-			id: uuidv4(),
+			id: ++messageId,
 			type: IO_EMIT_TYPE.MESSAGE[0],
 			message,
 			dateTime,
@@ -459,7 +461,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 		const dateTime = dateFormat(new Date(), dateFormatMask)
 		const score = SCORE_MAP.GIVE_UP
 		const commonMessage = {
-			id: uuidv4(),
+			id: ++messageId,
 			type: IO_EMIT_TYPE.GIVE_UP[0],
 			message: `${user.name} 放棄了題目 ${getScoreString(score)}`,
 			dateTime,
@@ -477,8 +479,9 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 		console.log(`user: ${user.name} emit ${IO_ON_EVENT_NAME.disconnect[0]}`)
 
 		const connectMessage = {
-			id: uuidv4(),
+			id: ++messageId,
 			type: IO_EMIT_TYPE.LEAVE[0],
+			user: getFrom(user),
 			message: `${user.name} 離開了房間`,
 			dateTime: dateFormat(new Date(), dateFormatMask),
 		}
