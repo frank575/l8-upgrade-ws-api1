@@ -200,6 +200,11 @@ const getScoreString = score => {
 	}
 }
 
+const getFrom = user => ({
+	id: user.id,
+	name: user.name,
+})
+
 io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	const userInfoString = socket.handshake.headers['user_info']
 	let socketId = socket.id
@@ -306,10 +311,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			if (socketId != null) {
 				sendMessageToSomeone(socket, socketId, {
 					...commonMessage,
-					from: {
-						id: user.id,
-						name: user.name,
-					},
+					from: getFrom(user),
 					message: `來自 ${user.name} 的祝福`,
 				})
 			}
@@ -358,7 +360,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 				score,
 			)}`,
 			dateTime,
-			userId,
+			from: getFrom(user),
 			score,
 		}
 		if (userMap[userId]) {
@@ -403,10 +405,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			type: IO_EMIT_TYPE.GIVE_UP[0],
 			message: `${user.name} 放棄了題目 ${getScoreString(score)}`,
 			dateTime,
-			from: {
-				id: user.id,
-				name: user.name,
-			},
+			from: getFrom(user),
 			score,
 		}
 		if (userMap[userId]) {
