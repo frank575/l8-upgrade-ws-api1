@@ -141,7 +141,7 @@ const sendMessageToSomeone = (socket, socketId, event) => {
 
 const restart = () => {
 	const ranks = getUsers()
-		.sort(e => e.score)
+		.sort((a, b) => b.score - a.score)
 		.splice(0, 3)
 
 	startTime = Date.now()
@@ -161,6 +161,7 @@ const restart = () => {
 		question: getQuestion(),
 		messages: [],
 		ranks,
+		dateTime: dateFormat(new Date(startTime), dateFormatMask),
 	})
 }
 
