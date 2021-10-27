@@ -296,18 +296,17 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 				blessType: type,
 				dateTime,
 			}
-			messages.push({
+			const toAllMessage = {
 				...commonMessage,
 				message: `${user.name} 給 ${userMap[userId]?.name} 倒讚`,
-			})
-			sendMessageToAll({
-				...commonMessage,
-				message: `${user.name} 給 ${userMap[userId]?.name} 倒讚`,
-			})
+			}
+			messages.push(toAllMessage)
+			sendMessageToAll(toAllMessage)
 			const socketId = onlineUserSocketIdMap[userId]
 			if (socketId != null) {
 				sendMessageToSomeone(socket, socketId, {
 					...commonMessage,
+					from: user,
 					message: `來自 ${user.name} 的祝福`,
 				})
 			}
