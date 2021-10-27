@@ -38,6 +38,7 @@ let startTime = Date.now()
 const K = 1
 const QUESTIONS = [
 	{
+		// ^[A-z]+[A-z0-9._]*@[A-z]+\.[A-z]+$
 		id: questionId++,
 		title: '信箱',
 		description:
@@ -59,8 +60,65 @@ const QUESTIONS = [
 		id: questionId++,
 		title: '數字範圍',
 		description: '數字 3 - 6 位數',
-		...createContentAndMatches({ 0: K }, [
+		...createContentAndMatches({ 0: K, 3: K, 4: K, 5: K }, [
 			{ id: questionId++, name: '123456' },
+			{ id: questionId++, name: '34' },
+			{ id: questionId++, name: '3456789' },
+			{ id: questionId++, name: '333' },
+			{ id: questionId++, name: '1234' },
+			{ id: questionId++, name: '12345' },
+		]),
+	},
+	{
+		// ^([1-9]\d{0,1}(\.\d{2})?|0(\.\d{2})?|100)$
+		id: questionId++,
+		title: '0 到 100',
+		description: '0 - 100, 0 與 100 無浮點數，之間的數字可填可不填',
+		...createContentAndMatches({ 0: K, 1: K, 4: K, 5: K, 6: K, 7: K, 9: K }, [
+			{ id: questionId++, name: '0' },
+			{ id: questionId++, name: '100' },
+			{ id: questionId++, name: '101' },
+			{ id: questionId++, name: '000' },
+			{ id: questionId++, name: '0.15' },
+			{ id: questionId++, name: '1' },
+			{ id: questionId++, name: '10' },
+			{ id: questionId++, name: '99.98' },
+			{ id: questionId++, name: '123' },
+			{ id: questionId++, name: '15.15' },
+			{ id: questionId++, name: '0.1' },
+			{ id: questionId++, name: '10000' },
+		]),
+	},
+	{
+		// ^([1-9]\d{0,1}(\.\d{2})?|0(\.\d{2})?|100)$
+		id: questionId++,
+		title: '六個字',
+		description: '只能輸入英文或數字，且長度必須為 6 以及至少要包含一個數字',
+		...createContentAndMatches({ 1: K, 3: K }, [
+			{ id: questionId++, name: 'a' },
+			{ id: questionId++, name: 'asd124' },
+			{ id: questionId++, name: 'aaaaaa' },
+			{ id: questionId++, name: 'aa1324' },
+			{ id: questionId++, name: 'aaa45ddd' },
+			{ id: questionId++, name: 'fa1f5' },
+			{ id: questionId++, name: 'a1' },
+			{ id: questionId++, name: 'a11d' },
+		]),
+	},
+	// 非題目先掛著：取出 json 中所有的 key (?="[^"]+":)"([^"]+)"
+	{
+		// [\u4e00-\u9fa5]
+		id: questionId++,
+		title: '中文',
+		description: '必須包含一個中文字',
+		...createContentAndMatches({ 0: K, 5: K }, [
+			{ id: questionId++, name: '笑asdasd' },
+			{ id: questionId++, name: 'gasasd' },
+			{ id: questionId++, name: 'as1f3a11234' },
+			{ id: questionId++, name: '%@!!@dasd' },
+			{ id: questionId++, name: 'fsa' },
+			{ id: questionId++, name: 'gasas哈' },
+			{ id: questionId++, name: 'asasd' },
 		]),
 	},
 ]
