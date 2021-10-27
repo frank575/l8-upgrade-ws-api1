@@ -306,7 +306,10 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			if (socketId != null) {
 				sendMessageToSomeone(socket, socketId, {
 					...commonMessage,
-					from: user,
+					from: {
+						id: user.id,
+						name: user.name,
+					},
 					message: `來自 ${user.name} 的祝福`,
 				})
 			}
