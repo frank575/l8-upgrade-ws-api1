@@ -82,6 +82,7 @@ const IO_ON_EVENT_NAME = {
 }
 const IO_EMIT_TYPE = {
 	JOIN: ['JOIN', '連接成功'],
+	LEAVE: ['LEAVE', '斷開連接'],
 	OVER_THEN_RESTART: ['OVER_THEN_RESTART', '遊戲結束，請重新開始'],
 	PONG: ['PONG', '乓'],
 	BLESS_YOU: ['BLESS_YOU', '祝福你'],
@@ -415,7 +416,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 
 		const connectMessage = {
 			id: uuidv4(),
-			type: IO_EMIT_TYPE.JOIN[0],
+			type: IO_EMIT_TYPE.LEAVE[0],
 			message: `${user.name} 離開了房間`,
 			dateTime: dateFormat(new Date(), dateFormatMask),
 		}
