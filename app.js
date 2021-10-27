@@ -169,7 +169,7 @@ setInterval(() => {
 	const now = Date.now()
 	const end = startTime + 3600000
 	const expired = now >= end
-	console.log(`時間檢測：now: ${now}, end: ${end}, expired: ${expired}`)
+	// console.log(`時間檢測：now: ${now}, end: ${end}, expired: ${expired}`)
 	if (expired) {
 		startTime = now
 		restart()
@@ -242,7 +242,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	}
 	onlineUserSocketIdMap[userId] = socketId
 
-	console.log(`user: ${user.name} connection`)
+	console.log(`user: ${user.name} on ${IO_ON_EVENT_NAME.connection[0]}`)
 	const connectMessage = {
 		id: uuidv4(),
 		type: IO_EMIT_TYPE.JOIN[0],
@@ -262,10 +262,15 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 		startDateTime: dateFormat(new Date(startTime), dateFormatMask),
 	})
 
-	socket.on(IO_ON_EVENT_NAME.restart[0], restart)
+	socket.on(IO_ON_EVENT_NAME.restart[0], () => {
+		console.log(`user: ${user.name} emit ${IO_ON_EVENT_NAME.restart[0]}`)
+
+		restart()
+	})
 
 	socket.on(IO_ON_EVENT_NAME.ping[0], () => {
-		console.log(`ping with ${user.name}`)
+		console.log(`user: ${user.name} emit ${IO_ON_EVENT_NAME.ping[0]}`)
+
 		socket.emit(IO_EMIT_EVENT_NAME.ping[0], {
 			type: IO_EMIT_TYPE.PONG[0],
 			message: IO_EMIT_TYPE.PONG[1],
@@ -273,6 +278,10 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	})
 
 	socket.on(IO_ON_EVENT_NAME.bless[0], msg => {
+		console.log(
+			`user: ${user.name} emit ${IO_ON_EVENT_NAME.bless[0]}, msg: ${msg}`,
+		)
+
 		if (msg == null) return
 		try {
 			const { type, userId } = msg
@@ -307,6 +316,10 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	})
 
 	socket.on(IO_ON_EVENT_NAME.answer[0], regexString => {
+		console.log(
+			`user: ${user.name} emit ${IO_ON_EVENT_NAME.answer[0]}, regexString: ${regexString}`,
+		)
+
 		if (regexString == null || typeof regexString != 'string') return
 		const regex = new RegExp(regexString)
 		const { matches, contents } = getQuestion()
@@ -356,6 +369,10 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	})
 
 	socket.on(IO_ON_EVENT_NAME.message[0], message => {
+		console.log(
+			`user: ${user.name} emit ${IO_ON_EVENT_NAME.message[0]}, message: ${message}`,
+		)
+
 		if (
 			message == null ||
 			typeof message !== 'string' ||
@@ -374,6 +391,8 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	})
 
 	socket.on(IO_ON_EVENT_NAME.giveUp[0], () => {
+		console.log(`user: ${user.name} emit ${IO_ON_EVENT_NAME.giveUp[0]}`)
+
 		const dateTime = dateFormat(new Date(), dateFormatMask)
 		const score = SCORE_MAP.GIVE_UP
 		const commonMessage = {
@@ -392,7 +411,8 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 	})
 
 	socket.on(IO_ON_EVENT_NAME.disconnect[0], () => {
-		console.log(`user: ${user.name} disconnected`)
+		console.log(`user: ${user.name} emit ${IO_ON_EVENT_NAME.disconnect[0]}`)
+
 		const connectMessage = {
 			id: uuidv4(),
 			type: IO_EMIT_TYPE.JOIN[0],
