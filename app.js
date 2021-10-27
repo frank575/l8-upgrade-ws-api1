@@ -403,7 +403,10 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			type: IO_EMIT_TYPE.GIVE_UP[0],
 			message: `${user.name} 放棄了題目 ${getScoreString(score)}`,
 			dateTime,
-			userId,
+			from: {
+				id: user.id,
+				name: user.name,
+			},
 			score,
 		}
 		if (userMap[userId]) {
