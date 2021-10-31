@@ -363,7 +363,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			}
 			const toAllMessage = {
 				...commonMessage,
-				message: `${user.name} 給 ${userMap[userId]?.name} 倒讚`,
+				message: `${user.name} 給 ${userMap[userId]?.name} ${type === BLESS_TYPE.BAD[0] ? '倒' : '一個'}讚`,
 			}
 			messages.push(toAllMessage)
 			sendMessageToAll(toAllMessage)
