@@ -450,6 +450,7 @@ io.on(IO_ON_EVENT_NAME.connection[0], socket => {
 			type: IO_EMIT_TYPE.MESSAGE[0],
 			message,
 			dateTime,
+			from: getFrom(user),
 		}
 		messages.push(commonMessage)
 		sendMessageToAll(commonMessage)
